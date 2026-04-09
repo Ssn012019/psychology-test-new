@@ -1,0 +1,989 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>心境测评 | 专业心理健康评估平台</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-light: #818cf8;
+            --primary-dark: #4f46e5;
+            --secondary: #a855f7;
+            --accent: #06b6d4;
+            --success: #22c55e;
+            --warning: #eab308;
+            --danger: #ef4444;
+            --bg-dark: #0f172a;
+            --bg-card: #1e293b;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --border: #334155;
+            --gradient-1: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Noto Sans SC', -apple-system, sans-serif;
+            background: var(--bg-dark);
+            min-height: 100vh;
+            color: var(--text-primary);
+            line-height: 1.7;
+        }
+
+        .bg-gradient {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: 
+                radial-gradient(ellipse at 20% 20%, rgba(99, 102, 241, 0.15) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 80%, rgba(168, 85, 247, 0.15) 0%, transparent 50%);
+            z-index: -1;
+        }
+
+        /* 密码保护 */
+        #password-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: var(--bg-dark);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+        #password-overlay.hidden { display: none; }
+        .login-box {
+            background: var(--bg-card);
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            border: 1px solid var(--border);
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+        }
+        .login-box h2 { margin-bottom: 10px; font-size: 1.5rem; }
+        .login-box p { color: var(--text-muted); margin-bottom: 25px; font-size: 0.9rem; }
+        .login-box input {
+            width: 100%;
+            padding: 14px 16px;
+            margin-bottom: 15px;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+        .login-box input:focus { border-color: var(--primary); }
+        .login-box button {
+            width: 100%;
+            padding: 14px;
+            background: var(--gradient-1);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .login-box button:hover {
+            transform: scale(1.02);
+            box-shadow: 0 10px 30px rgba(99, 102, 241, 0.4);
+        }
+        #login-error { color: var(--danger); margin-top: 15px; font-size: 0.9rem; min-height: 20px; }
+        
+        /* 密码验证通过前隐藏页面 */
+        #password-overlay:not(.hidden) ~ .bg-gradient,
+        #password-overlay:not(.hidden) ~ header,
+        #password-overlay:not(.hidden) ~ main,
+        #password-overlay:not(.hidden) ~ footer {
+            visibility: hidden;
+        }
+
+        header {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            z-index: 100;
+            padding: 1rem 2rem;
+            background: rgba(15, 23, 42, 0.9);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 1.4rem;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .logo-icon {
+            width: 42px;
+            height: 42px;
+            background: var(--gradient-1);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        nav { display: flex; gap: 0.5rem; }
+
+        nav button {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            padding: 0.6rem 1.2rem;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        nav button:hover {
+            background: var(--bg-card);
+            color: var(--text-primary);
+            border-color: var(--primary);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 6rem 2rem 4rem;
+        }
+
+        .hero {
+            text-align: center;
+            padding: 4rem 2rem;
+            margin-bottom: 4rem;
+        }
+
+        .hero-badge {
+            display: inline-block;
+            background: rgba(99, 102, 241, 0.2);
+            color: var(--primary-light);
+            padding: 0.5rem 1.25rem;
+            border-radius: 50px;
+            font-size: 0.85rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .hero h1 {
+            font-size: 2.8rem;
+            font-weight: 700;
+            margin-bottom: 1.25rem;
+            background: linear-gradient(135deg, #fff 0%, #94a3b8 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero p {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            max-width: 600px;
+            margin: 0 auto 2.5rem;
+        }
+
+        .hero-stats {
+            display: flex;
+            justify-content: center;
+            gap: 4rem;
+            flex-wrap: wrap;
+        }
+
+        .stat-item { text-align: center; }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: var(--gradient-1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .stat-label { color: var(--text-muted); font-size: 0.9rem; }
+
+        .section-title {
+            font-size: 1.75rem;
+            font-weight: 600;
+            margin-bottom: 2rem;
+        }
+
+        .test-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 4rem;
+        }
+
+        .test-card {
+            background: var(--bg-card);
+            border-radius: 20px;
+            padding: 2rem;
+            border: 1px solid var(--border);
+            cursor: pointer;
+            transition: all 0.4s;
+            position: relative;
+        }
+
+        .test-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 3px;
+            background: var(--gradient-1);
+            border-radius: 20px 20px 0 0;
+            transform: scaleX(0);
+            transition: transform 0.4s;
+        }
+
+        .test-card:hover {
+            transform: translateY(-8px);
+            border-color: var(--primary);
+            box-shadow: 0 20px 40px rgba(99, 102, 241, 0.2);
+        }
+
+        .test-card:hover::before { transform: scaleX(1); }
+
+        .test-header {
+            display: flex;
+            align-items: flex-start;
+            gap: 1.25rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .test-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.75rem;
+            background: rgba(99, 102, 241, 0.2);
+        }
+
+        .test-info h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 0.35rem;
+        }
+
+        .test-info p { color: var(--text-muted); font-size: 0.85rem; }
+
+        .test-desc {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .test-tags {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin-bottom: 1.5rem;
+        }
+
+        .tag {
+            background: rgba(99, 102, 241, 0.1);
+            color: var(--primary-light);
+            padding: 0.35rem 0.85rem;
+            border-radius: 50px;
+            font-size: 0.8rem;
+        }
+
+        .test-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 1.25rem;
+            border-top: 1px solid var(--border);
+        }
+
+        .test-meta {
+            display: flex;
+            gap: 1.25rem;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .start-btn {
+            background: var(--gradient-1);
+            color: white;
+            border: none;
+            padding: 0.7rem 1.5rem;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .start-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 30px rgba(99, 102, 241, 0.4);
+        }
+
+        .test-page {
+            display: none;
+            background: var(--bg-card);
+            border-radius: 20px;
+            padding: 3rem;
+            border: 1px solid var(--border);
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .test-page.active { display: block; }
+
+        .progress-container { margin-bottom: 2.5rem; }
+
+        .progress-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.75rem;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: var(--border);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--gradient-1);
+            transition: width 0.4s;
+        }
+
+        .question-section {
+            text-align: center;
+            margin-bottom: 2.5rem;
+        }
+
+        .question-number {
+            color: var(--primary-light);
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+        }
+
+        .question-text {
+            font-size: 1.4rem;
+            font-weight: 500;
+            line-height: 1.8;
+        }
+
+        .options-grid { display: grid; gap: 1rem; }
+
+        .option-btn {
+            background: var(--bg-dark);
+            border: 2px solid var(--border);
+            padding: 1.25rem 1.5rem;
+            border-radius: 14px;
+            cursor: pointer;
+            text-align: center;
+            color: var(--text-primary);
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+
+        .option-btn:hover {
+            border-color: var(--primary);
+            background: rgba(99, 102, 241, 0.1);
+        }
+
+        .result-page {
+            display: none;
+            background: var(--bg-card);
+            border-radius: 20px;
+            padding: 3rem;
+            border: 1px solid var(--border);
+            max-width: 700px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        .result-page.active { display: block; }
+
+        .result-icon {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            margin: 0 auto 1.5rem;
+        }
+
+        .result-title {
+            font-size: 1.75rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .result-score {
+            font-size: 3.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .result-level {
+            font-size: 1.25rem;
+            color: var(--text-secondary);
+            margin-bottom: 1.5rem;
+        }
+
+        .result-desc {
+            color: var(--text-secondary);
+            font-size: 1rem;
+            line-height: 1.8;
+            margin-bottom: 2rem;
+            text-align: left;
+            background: var(--bg-dark);
+            padding: 1.5rem;
+            border-radius: 12px;
+        }
+
+        .suggestions { text-align: left; margin-bottom: 2rem; }
+
+        .suggestions h4 { font-size: 1.1rem; margin-bottom: 1rem; }
+
+        .suggestions ul { list-style: none; }
+
+        .suggestions li {
+            padding: 0.75rem 0;
+            color: var(--text-secondary);
+        }
+
+        .suggestions li::before {
+            content: '✦ ';
+            color: var(--primary-light);
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .action-btn {
+            padding: 0.85rem 2rem;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 600;
+            border: none;
+            transition: all 0.3s;
+        }
+
+        .action-btn.primary {
+            background: var(--gradient-1);
+            color: white;
+        }
+
+        .action-btn.secondary {
+            background: transparent;
+            color: var(--text-primary);
+            border: 2px solid var(--border);
+        }
+
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: transparent;
+            color: var(--text-secondary);
+            border: 1px solid var(--border);
+            padding: 0.6rem 1.25rem;
+            border-radius: 10px;
+            cursor: pointer;
+            margin-bottom: 1.5rem;
+            transition: all 0.3s;
+        }
+
+        .back-btn:hover {
+            background: var(--bg-card);
+            color: var(--text-primary);
+        }
+
+        .info-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 4rem;
+        }
+
+        .info-card {
+            background: var(--bg-card);
+            border-radius: 20px;
+            padding: 2rem;
+            border: 1px solid var(--border);
+        }
+
+        .info-card h4 {
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+        }
+
+        .info-card p {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+
+        footer {
+            text-align: center;
+            padding: 3rem 2rem;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            border-top: 1px solid var(--border);
+        }
+
+        @media (max-width: 768px) {
+            .header-content { flex-direction: column; gap: 1rem; }
+            .container { padding: 5rem 1rem 2rem; }
+            .hero { padding: 2rem 1rem; }
+            .hero h1 { font-size: 2rem; }
+            .hero-stats { gap: 2rem; }
+            .test-grid { grid-template-columns: 1fr; }
+            .test-page, .result-page { padding: 1.5rem; }
+            .question-text { font-size: 1.15rem; }
+        }
+    </style>
+</head>
+<body>
+    <!-- 密码保护层 -->
+    <div id="password-overlay">
+        <div class="login-box">
+            <h2>🔐 请输入访问密码</h2>
+            <p>请输入密码以访问心理测评</p>
+            <input type="password" id="pwd-input" placeholder="请输入密码" onkeypress="if(event.key==='Enter')checkPwd()">
+            <button onclick="checkPwd()">进入测评</button>
+            <div id="login-error"></div>
+        </div>
+    </div>
+
+    <div class="bg-gradient"></div>
+
+    <header>
+        <div class="header-content">
+            <div class="logo" onclick="showHome()">
+                <div class="logo-icon">☔</div>
+                <span>心境测评</span>
+            </div>
+            <nav>
+                <button onclick="showHome()">首页</button>
+                <button onclick="showAllTests()">全部测评</button>
+                <button onclick="showDisclaimer()">测评须知</button>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container">
+        <div id="homeView">
+            <section class="hero">
+                <div class="hero-badge">✨ 专业心理健康评估平台</div>
+                <h1>了解内心，拥抱健康</h1>
+                <p>基于国际标准量表的科学测评，帮助你科学认识焦虑、抑郁等心理状态，获取专业建议。</p>
+                <div class="hero-stats">
+                    <div class="stat-item">
+                        <div class="stat-number">10+</div>
+                        <div class="stat-label">专业量表</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">500万+</div>
+                        <div class="stat-label">用户测评</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">精心制作</div>
+                        <div class="stat-label">专业打造</div>
+                    </div>
+                </div>
+            </section>
+
+            <h2 class="section-title">📋 专业测评</h2>
+            <div class="test-grid" id="testGrid"></div>
+
+            <h2 class="section-title">💡 关于测评</h2>
+            <div class="info-section">
+                <div class="info-card">
+                    <h4>🔬 科学严谨</h4>
+                    <p>所有测评量表均采用国际公认的心理学标准量表，经过严格的信效度检验，确保测评结果的科学性和准确性。</p>
+                </div>
+                <div class="info-card">
+                    <h4>🔒 隐私保护</h4>
+                    <p>测评数据仅在本地处理，不会上传至服务器，充分保护您的隐私安全。测评结果仅您可见。</p>
+                </div>
+                <div class="info-card">
+                    <h4>⚠️ 重要声明</h4>
+                    <p>本测评结果仅供参考，不作为临床诊断依据。如有心理困扰，建议寻求专业心理咨询师或医生的帮助。</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="test-page" id="testPage">
+            <button class="back-btn" onclick="cancelTest()">← 返回首页</button>
+            <div class="progress-container">
+                <div class="progress-info">
+                    <span id="progressText">题目进度</span>
+                    <span id="progressPercent">0%</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+            </div>
+            <div class="question-section">
+                <div class="question-number" id="questionNumber"></div>
+                <div class="question-text" id="questionText"></div>
+            </div>
+            <div class="options-grid" id="optionsContainer"></div>
+        </div>
+
+        <div class="result-page" id="resultPage">
+            <button class="back-btn" onclick="showHome()">← 返回首页</button>
+            <div class="result-icon" id="resultIcon"></div>
+            <h2 class="result-title" id="resultTitle"></h2>
+            <div class="result-score" id="resultScore"></div>
+            <div class="result-level" id="resultLevel"></div>
+            <div class="result-desc" id="resultDesc"></div>
+            <div class="suggestions" id="suggestions"></div>
+            <div class="action-buttons">
+                <button class="action-btn primary" onclick="showAllTests()">继续测评</button>
+                <button class="action-btn secondary" onclick="shareResult()">分享结果</button>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <p>心境测评 - 专业心理健康评估平台</p>
+        <p>本测评结果仅供参考，不作为临床诊断依据 | 如有心理困扰请寻求专业帮助</p>
+        <p style="margin-top: 1rem;">© 2026 心境测评 版权所有</p>
+    </footer>
+
+    <script>
+        // 密码验证
+        function checkPwd() {
+            const pwd = document.getElementById('pwd-input').value;
+            if (pwd === 'pystest90908') {
+                document.getElementById('password-overlay').classList.add('hidden');
+            } else {
+                document.getElementById('login-error').textContent = '密码错误，请重新输入';
+                document.getElementById('pwd-input').value = '';
+            }
+        }
+
+        const tests = [
+            {
+                id: 'gad7',
+                name: '广泛性焦虑量表(GAD-7)',
+                icon: '😰',
+                time: '3-5分钟',
+                questions: 7,
+                desc: '国际通用的焦虑症状筛查工具，快速评估近两周的焦虑程度，适合青少年和职场人士自我检测。',
+                tags: ['焦虑', '国际标准', '快速筛查'],
+                questionList: [
+                    { q: '在过去两周内，您是否感到紧张、焦虑或烦躁？', options: ['完全不会', '有几天', '一半以上的时间', '几乎每天'] },
+                    { q: '在过去两周内，您是否无法停止或控制担忧？', options: ['完全不会', '有几天', '一半以上的时间', '几乎每天'] },
+                    { q: '在过去两周内，您是否对各种各样的事情过度担忧？', options: ['完全不会', '有几天', '一半以上的时间', '几乎每天'] },
+                    { q: '在过去两周内，您是否难以放松？', options: ['完全不会', '有几天', '一半以上的时间', '几乎每天'] },
+                    { q: '在过去两周内，您是否感到坐立不安？', options: ['完全不会', '有几天', '一半以上的时间', '几乎每天'] },
+                    { q: '在过去两周内，您是否容易烦躁或易怒？', options: ['完全不会', '有几天', '一半以上的时间', '几乎每天'] },
+                    { q: '在过去两周内，您是否感到害怕？', options: ['完全不会', '有几天', '一半以上的时间', '几乎每天'] }
+                ],
+                calc: (s) => {
+                    let l, i, c, d, v;
+                    if (s <= 4) { l = '无焦虑或轻微焦虑'; i = '😊'; c = '#22c55e'; v = 'low'; d = '您的焦虑水平在正常范围内，说明您近期心理状态良好。继续保持健康的生活方式，注意劳逸结合。'; }
+                    else if (s <= 9) { l = '轻度焦虑'; i = '😐'; c = '#eab308'; v = 'mild'; d = '您可能有轻度的焦虑症状，建议关注自己的情绪变化，适当进行放松训练。如果症状持续，建议寻求专业帮助。'; }
+                    else if (s <= 14) { l = '中度焦虑'; i = '😟'; c = '#f97316'; v = 'moderate'; d = '您可能有中度焦虑症状，建议您寻求心理咨询师的帮助，学习有效的情绪管理技巧。'; }
+                    else { l = '重度焦虑'; i = '😰'; c = '#ef4444'; v = 'severe'; d = '您的焦虑水平较高，强烈建议您尽快寻求专业心理咨询师或精神科医生的帮助。'; }
+                    return { score: s, level: l, icon: i, color: c, desc: d, severity: v };
+                }
+            },
+            {
+                id: 'phq9',
+                name: '抑郁症筛查量表(PHQ-9)',
+                icon: '😔',
+                time: '3-5分钟',
+                questions: 9,
+                desc: '国际公认的抑郁症状筛查工具，评估近两周的抑郁情绪，帮助及早发现抑郁倾向。',
+                tags: ['抑郁', '国际标准', '临床常用'],
+                questionList: [
+                    { q: '在过去两周内，您是否感到做事提不起兴趣？', options: ['完全不会', '有几天', '一半以上的时间', '几乎每天'] },
+                    { q: '在过去两周内，您是否感到心情低落、沮丧？', options: ['完全不会', '有几天', '一半以上的时间', '几乎每天'] },
+                    { q: '在过去两周内，您是否有睡眠问题？', options: ['完全不会', '有几天', '一半以上的时间', '几乎每天'] },
+                    { q: '在过去两周内，您是否感到疲倦或没有活力？', options: ['完全不会', '有几天', '一半以上的时间', '几乎每天'] },
+                    { q: '在过去两周内，您是否食欲不振或进食过多？', options: ['完全不会', '有几天', '一半以上的时间', '几乎每天'] },
+                    { q: '在过去两周内，您是否觉得自己很糟糕？', options: ['完全不会', '有几天', '一半以上的时间', '几乎每天'] },
+                    { q: '在过去两周内，您是否难以集中注意力？', options: ['完全不会', '有几天', '一半以上的时间', '几乎每天'] },
+                    { q: '在过去两周内，您是否行动缓慢或烦躁不安？', options: ['完全不会', '有几天', '一半以上的时间', '几乎每天'] },
+                    { q: '在过去两周内，您是否有过伤害自己的念头？', options: ['完全不会', '有几天', '一半以上的时间', '几乎每天'] }
+                ],
+                calc: (s) => {
+                    let l, i, c, d, v;
+                    if (s <= 4) { l = '无抑郁或轻微抑郁'; i = '😊'; c = '#22c55e'; v = 'low'; d = '您的抑郁水平在正常范围内，说明您近期情绪状态良好。保持积极的生活态度。'; }
+                    else if (s <= 9) { l = '轻度抑郁'; i = '😐'; c = '#eab308'; v = 'mild'; d = '您可能有轻度的抑郁情绪，建议多与朋友家人交流，培养兴趣爱好。如症状持续，建议寻求专业帮助。'; }
+                    else if (s <= 14) { l = '中度抑郁'; i = '😟'; c = '#f97316'; v = 'moderate'; d = '您可能有中度抑郁症状，建议您及时寻求心理咨询师的帮助，不要独自承受。'; }
+                    else if (s <= 19) { l = '中重度抑郁'; i = '😔'; c = '#f97316'; v = 'moderate'; d = '您的抑郁程度较重，强烈建议您尽快寻求专业心理咨询或精神科医生的帮助。'; }
+                    else { l = '重度抑郁'; i = '😔'; c = '#ef4444'; v = 'severe'; d = '您的抑郁症状较为严重，请务必尽快寻求专业精神科医生的帮助。您不需要独自面对。'; }
+                    return { score: s, level: l, icon: i, color: c, desc: d, severity: v };
+                }
+            },
+            {
+                id: 'stress',
+                name: '心理压力测评',
+                icon: '⚡',
+                time: '3-5分钟',
+                questions: 10,
+                desc: '评估当前生活和工作压力水平，帮助了解压力来源，学会科学管理压力。',
+                tags: ['压力', '职场', '学生'],
+                questionList: [
+                    { q: '您是否经常感到工作或学习压力很大？', options: ['从不', '偶尔', '有时', '经常', '总是'] },
+                    { q: '您是否难以入睡或睡眠质量不好？', options: ['从不', '偶尔', '有时', '经常', '总是'] },
+                    { q: '您是否感到精力不足或容易疲劳？', options: ['从不', '偶尔', '有时', '经常', '总是'] },
+                    { q: '您是否容易烦躁或发脾气？', options: ['从不', '偶尔', '有时', '经常', '总是'] },
+                    { q: '您是否难以集中注意力？', options: ['从不', '偶尔', '有时', '经常', '总是'] },
+                    { q: '您是否感到对未来担忧？', options: ['从不', '偶尔', '有时', '经常', '总是'] },
+                    { q: '您是否有足够的时间休息放松？', options: ['总是', '经常', '有时', '偶尔', '从不'] },
+                    { q: '您是否能有效应对生活中的挑战？', options: ['总是', '经常', '有时', '偶尔', '从不'] },
+                    { q: '您是否感到人际关系紧张？', options: ['从不', '偶尔', '有时', '经常', '总是'] },
+                    { q: '您是否对自己的生活满意？', options: ['非常满意', '比较满意', '一般', '不太满意', '很不满意'] }
+                ],
+                calc: (s) => {
+                    let l, i, c, d, v;
+                    if (s <= 30) { l = '压力较低'; i = '😊'; c = '#22c55e'; v = 'low'; d = '您的压力水平较低，心理状态良好。继续保持健康的生活方式。'; }
+                    else if (s <= 50) { l = '压力适中'; i = '😐'; c = '#eab308'; v = 'mild'; d = '您的压力处于中等水平，建议学习一些放松技巧，保持规律作息。'; }
+                    else if (s <= 70) { l = '压力较大'; i = '😟'; c = '#f97316'; v = 'moderate'; d = '您的压力较大，建议寻找压力来源，学习有效的应对策略。'; }
+                    else { l = '压力过大'; i = '😰'; c = '#ef4444'; v = 'severe'; d = '您的压力过大，可能影响身心健康。强烈建议寻求专业心理咨询师的帮助。'; }
+                    return { score: s, level: l, icon: i, color: c, desc: d, severity: v };
+                }
+            },
+            {
+                id: 'youth',
+                name: '青少年心理健康测评',
+                icon: '🎒',
+                time: '5分钟',
+                questions: 10,
+                desc: '专为青少年设计，评估学业压力、情绪状态、人际关系等方面的心理健康状况。',
+                tags: ['青少年', '学生', '成长'],
+                questionList: [
+                    { q: '面对考试时，我感到非常紧张', options: ['从不', '偶尔', '有时', '经常', '总是'] },
+                    { q: '我担心自己的成绩不如别人', options: ['从不', '偶尔', '有时', '经常', '总是'] },
+                    { q: '与同学相处时我感到不自在', options: ['从不', '偶尔', '有时', '经常', '总是'] },
+                    { q: '我感到父母对我的期望太高', options: ['从不', '偶尔', '有时', '经常', '总是'] },
+                    { q: '我觉得没有人真正理解我', options: ['从不', '偶尔', '有时', '经常', '总是'] },
+                    { q: '我对未来感到迷茫或担忧', options: ['从不', '偶尔', '有时', '经常', '总是'] },
+                    { q: '我很难集中精力学习', options: ['从不', '偶尔', '有时', '经常', '总是'] },
+                    { q: '我经常感到疲倦或没有精神', options: ['从不', '偶尔', '有时', '经常', '总是'] },
+                    { q: '我容易因为小事发脾气', options: ['从不', '偶尔', '有时', '经常', '总是'] },
+                    { q: '我觉得自己有很多优点', options: ['总是', '经常', '有时', '偶尔', '从不'] }
+                ],
+                calc: (s) => {
+                    let l, i, c, d, v;
+                    if (s <= 25) { l = '心理健康状态良好'; i = '😊'; c = '#22c55e'; v = 'low'; d = '您的心理健康状态良好，继续保持积极的心态，合理安排学习和休息时间。'; }
+                    else if (s <= 45) { l = '有轻微心理压力'; i = '😐'; c = '#eab308'; v = 'mild'; d = '您可能有一些心理压力，建议多与家人朋友沟通，培养兴趣爱好，适当放松。'; }
+                    else if (s <= 65) { l = '心理压力较大'; i = '😟'; c = '#f97316'; v = 'moderate'; d = '您的心理压力较大，建议与信任的人倾诉，必要时寻求学校心理老师或专业心理咨询师的帮助。'; }
+                    else { l = '需要特别关注'; i = '😰'; c = '#ef4444'; v = 'severe'; d = '您的心理状态需要特别关注，强烈建议您与家长、老师沟通，或寻求专业心理咨询师的帮助。'; }
+                    return { score: s, level: l, icon: i, color: c, desc: d, severity: v };
+                }
+            },
+            {
+                id: 'workplace',
+                name: '职场心理健康测评',
+                icon: '💼',
+                time: '5分钟',
+                questions: 10,
+                desc: '专为职场人士设计，评估工作压力、职业倦怠、职场人际关系等方面的心理健康状况。',
+                tags: ['职场', '工作', '职业'],
+                questionList: [
+                    { q: '我对目前的工作感到满意', options: ['非常满意', '比较满意', '一般', '不太满意', '很不满意'] },
+                    { q: '我经常感到工作压力很大', options: ['从不', '偶尔', '有时', '经常', '总是'] },
+                    { q: '我能够平衡工作和生活', options: ['总是', '经常', '有时', '偶尔', '从不'] },
+                    { q: '我与同事的关系融洽', options: ['非常融洽', '比较融洽', '一般', '不太融洽', '很不融洽'] },
+                    { q: '我对未来职业发展感到迷茫', options: ['从不', '偶尔', '有时', '经常', '总是'] },
+                    { q: '我经常加班到很晚', options: ['从不', '偶尔', '有时', '经常', '总是'] },
+                    { q: '我感到工作让我身心疲惫', options: ['从不', '偶尔', '有时', '经常', '总是'] },
+                    { q: '我在工作中能够获得成就感', options: ['总是', '经常', '有时', '偶尔', '从不'] },
+                    { q: '我对工作中的挑战感到力不从心', options: ['从不', '偶尔', '有时', '经常', '总是'] },
+                    { q: '我考虑过换工作或辞职', options: ['从不', '偶尔', '有时', '经常', '总是'] }
+                ],
+                calc: (s) => {
+                    let l, i, c, d, v;
+                    if (s <= 25) { l = '职场状态良好'; i = '😊'; c = '#22c55e'; v = 'low'; d = '您的职场心理状态良好，能够较好地应对工作压力。继续保持工作与生活的平衡。'; }
+                    else if (s <= 45) { l = '轻度职业倦怠'; i = '😐'; c = '#eab308'; v = 'mild'; d = '您可能有轻微的职业倦怠感，建议适当调整工作节奏，培养工作外的兴趣爱好。'; }
+                    else if (s <= 65) { l = '中度职业倦怠'; i = '😟'; c = '#f97316'; v = 'moderate'; d = '您的职业倦怠感较强，建议审视工作状态，必要时与上级沟通或寻求职业咨询。'; }
+                    else { l = '重度职业倦怠'; i = '😰'; c = '#ef4444'; v = 'severe'; d = '您的职业倦怠感较为严重，建议认真考虑职业规划，必要时寻求专业心理咨询帮助。'; }
+                    return { score: s, level: l, icon: i, color: c, desc: d, severity: v };
+                }
+            },
+            {
+                id: 'sleep',
+                name: '睡眠质量评估',
+                icon: '😴',
+                time: '3分钟',
+                questions: 8,
+                desc: '评估睡眠质量，睡眠问题常与焦虑抑郁相关，改善睡眠有助于心理健康。',
+                tags: ['睡眠', '健康', '生活质量'],
+                questionList: [
+                    { q: '您入睡需要多长时间？', options: ['15分钟内', '15-30分钟', '30-60分钟', '超过60分钟'] },
+                    { q: '您半夜醒来的次数？', options: ['不会醒来', '1次', '2次', '3次及以上'] },
+                    { q: '您每晚实际睡眠时间？', options: ['7小时以上', '6-7小时', '5-6小时', '不足5小时'] },
+                    { q: '您早晨醒来时的感觉？', options: ['精力充沛', '比较清醒', '有些疲惫', '非常疲惫'] },
+                    { q: '您白天的精神状态？', options: ['很好', '较好', '一般', '很差'] },
+                    { q: '您是否经常做噩梦？', options: ['从不', '偶尔', '有时', '经常'] },
+                    { q: '您是否有规律的作息时间？', options: ['非常规律', '比较规律', '不太规律', '很不规律'] },
+                    { q: '您睡前是否使用电子设备？', options: ['从不', '偶尔', '经常', '总是'] }
+                ],
+                calc: (s) => {
+                    let l, i, c, d, v;
+                    if (s <= 15) { l = '睡眠质量良好'; i = '😊'; c = '#22c55e'; v = 'low'; d = '您的睡眠质量良好，继续保持规律的作息习惯。'; }
+                    else if (s <= 30) { l = '睡眠质量一般'; i = '😐'; c = '#eab308'; v = 'mild'; d = '您的睡眠质量一般，建议改善睡眠环境，保持规律作息，睡前避免使用电子设备。'; }
+                    else { l = '睡眠质量较差'; i = '😫'; c = '#ef4444'; v = 'severe'; d = '您的睡眠质量较差，可能影响身心健康。建议调整作息，如问题持续请寻求专业帮助。'; }
+                    return { score: s, level: l, icon: i, color: c, desc: d, severity: v };
+                }
+            }
+        ];
+
+        let currentTest = null;
+        let currentQ = 0;
+        let answers = [];
+
+        document.addEventListener('DOMContentLoaded', renderTests);
+
+        function renderTests() {
+            const grid = document.getElementById('testGrid');
+            grid.innerHTML = tests.map(t => `
+                <div class="test-card" onclick="startTest('${t.id}')">
+                    <div class="test-header">
+                        <div class="test-icon">${t.icon}</div>
+                        <div class="test-info">
+                            <h3>${t.name}</h3>
+                            <p>${t.questions} 题 · ${t.time}</p>
+                        </div>
+                    </div>
+                    <div class="test-desc">${t.desc}</div>
+                    <div class="test-tags">${t.tags.map(tag => `<span class="tag">${tag}</span>`).join('')}</div>
+                    <div class="test-footer">
+                        <div class="test-meta">
+                            <span>⏱ ${t.time}</span>
+                            <span>📝 ${t.questions}题</span>
+                        </div>
+                        <button class="start-btn">开始测评</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function startTest(id) {
+            currentTest = tests.find(t => t.id === id);
+            currentQ = 0;
+            answers = [];
+            document.getElementById('homeView').style.display = 'none';
+            document.getElementById('testPage').classList.add('active');
+            document.getElementById('resultPage').classList.remove('active');
+            showQuestion();
+        }
+
+        function showQuestion() {
+            const q = currentTest.questionList[currentQ];
+            const total = currentTest.questionList.length;
+            const pct = Math.round(((currentQ + 1) / total) * 100);
+
+            document.getElementById('progressFill').style.width = pct + '%';
+            document.getElementById('progressPercent').textContent = pct + '%';
+            document.getElementById('progressText').textContent = `第 ${currentQ + 1} 题 / 共 ${total} 题`;
+            document.getElementById('questionNumber').textContent = `问题 ${currentQ + 1}`;
+            document.getElementById('questionText').textContent = q.q;
+
+            document.getElementById('optionsContainer').innerHTML = q.options.map((opt, i) => 
+                `<div class="option-btn" onclick="selectOpt(${i})">${opt}</div>`
+            ).join('');
+        }
+
+        function selectOpt(idx) {
+            answers.push(idx);
+            if (currentQ < currentTest.questionList.length - 1) {
+                currentQ++;
+                showQuestion();
+            } else {
+                showResult();
+            }
+        }
+
+        function showResult() {
+            let score = 0;
+            answers.forEach((a, i) => {
+                const maxIdx = currentTest.questionList[i].options.length - 1;
+                score += (a / maxIdx) * 100;
+            });
+            score = Math.round(score / answers.length * currentTest.questionList.length / 10);
+
+            const r = currentTest.calc(score);
+
+            document.getElementById('testPage').classList.remove('active');
+            document.getElementById('resultPage').classList.add('active');
+
+            document.getElementById('resultIcon').textContent = r.icon;
+            document.getElementById('resultIcon').className = 'result-icon ' + r.severity;
+            document.getElementById('resultTitle').textContent = currentTest.name;
+            document.getElementById('resultScore').textContent = r.score + '分';
+            document.getElementById('resultScore').style.color = r.color;
+            document.getElementById('resultLevel').textContent = r.level;
+            document.getElementById('resultDesc').textContent = r.desc;
+
+            const suggestions = [
+                '保持规律的作息时间，充足睡眠对心理健康很重要',
+                '适当运动，每天30分钟有氧运动有助于改善情绪',
+                '与家人朋友保持沟通，不要独自承受压力',
+                '学习放松技巧，如深呼吸、冥想等',
+                '如有持续困扰，请及时寻求专业帮助'
+            ];
+            document.getElementById('suggestions').innerHTML = 
+                `<h4>💡 建议措施</h4><ul>${suggestions.map(s => `<li>${s}</li>`).join('')}</ul>`;
+        }
+
+        function cancelTest() { showHome(); }
+
+        function showHome() {
+            document.getElementById('homeView').style.display = 'block';
+            document.getElementById('testPage').classList.remove('active');
+            document.getElementById('resultPage').classList.remove('active');
+        }
+
+        function showAllTests() {
+            showHome();
+            document.querySelector('.test-grid').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function showDisclaimer() {
+            alert('【测评须知】\n\n1. 本测评采用国际标准量表，结果仅供参考\n2. 测评数据仅在本地处理，保护隐私\n3. 结果不作为临床诊断依据\n4. 如有心理困扰，请寻求专业帮助\n\n全国心理援助热线：400-161-9995');
+        }
+
+        function shareResult() {
+            const text = `我刚刚完成了【${currentTest.name}】测评，来试试吧！`;
+            if (navigator.share) {
+                navigator.share({ title: '心理测评结果', text: text });
+            } else {
+                alert('请截图分享给朋友！');
+            }
+        }
+    </script>
+</body>
+</html>
